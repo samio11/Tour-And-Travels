@@ -2,7 +2,7 @@ import { model, Schema } from "mongoose";
 import { EIsActive, ERole, IAuthProvider, IUser } from "./user.interface";
 const authSchema = new Schema<IAuthProvider>(
   {
-    provider: { type: String, required: true },
+    provider: { type: String, enum: ["credentials", "google"], required: true },
     providerId: { type: String, required: true },
   },
   {
