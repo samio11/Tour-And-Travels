@@ -2,6 +2,7 @@ import { Server } from "http";
 import mongoose from "mongoose";
 import config from "./app/config";
 import app from "./app";
+import { seedSuperAdmin } from "./app/utils/seedSuperAdmin";
 
 let server: Server;
 
@@ -15,6 +16,11 @@ async function startServer() {
     console.log(err);
   }
 }
+
+(async () => {
+  await startServer();
+  await seedSuperAdmin();
+})();
 
 process.on("unhandledRejection", (error) => {
   console.log(`Unhandled Rejection:- ${error}`);
@@ -43,5 +49,3 @@ process.on("SIGTERM", () => {
   }
   process.exit(1);
 });
-
-startServer();
