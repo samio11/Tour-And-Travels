@@ -18,6 +18,8 @@ export const checkAuth =
       if (!authRole.includes(verifyToken1.role)) {
         throw new AppError(403, "You dont have access for this route");
       }
+      req.user = verifyToken1;
+      console.log("From checkAuth", req.user);
       next();
     } catch (error) {
       next(error);

@@ -3,8 +3,13 @@ import { IUser } from "../user/user.interface";
 import { User } from "../user/user.model";
 import httpStatus from "http-status-codes";
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
-import { generateToken } from "../../utils/jwt";
+import jwt, { JwtPayload } from "jsonwebtoken";
+import { generateToken, verifyToken } from "../../utils/jwt";
+import {
+  createAccessTokenWithRefreshToken,
+  createUserToken,
+} from "../../utils/userToken";
+import config from "../../config";
 
 const credentialsLogin = async (payload: Partial<IUser>) => {
   const { email, password } = payload;
@@ -22,21 +27,39 @@ const credentialsLogin = async (payload: Partial<IUser>) => {
       "Password not matched! try again"
     );
   }
-  const jwtPayload = {
-    userId: existUser?.id,
-    email: existUser?.email,
-    role: existUser?.role,
-  };
-  // const accressToken = jwt.sign(jwtPayload, "Samio11", { expiresIn: "1d" });
-  const accressToken = generateToken(
-    jwtPayload,
-    process.env.JWT_TOKEN as string,
-    process.env.JWT_EXPIRES as string
-  );
+  const userToken = createUserToken(existUser);
+  const { password: pass, ...rest } = existUser.toObject();
   return {
-    email: existUser?.email,
-    accressToken,
+    user: rest,
+    accessToken: userToken?.accessToken,
+    refreshToken: userToken?.refreshToken,
   };
 };
 
-export const authServices = { credentialsLogin };
+const getAccessToken = async (refreshToken: string) => {
+  const newAccessToken = await createAccessTokenWithRefreshToken(refreshToken);
+
+  return {
+    accessToken: newAccessToken,
+  };
+};
+
+const resetPassword = async (
+  oldPassword: string,
+  newPassword: string,
+  decodedToken: JwtPayload
+) => {
+  const user = await User.findById(decodedToken.userId);
+  const isOldPasswordMatch = await bcrypt.compare(
+    oldPassword,
+    user?.password as string
+  );
+  if (!isOldPasswordMatch) {
+    throw new AppError(httpStatus.UNAUTHORIZED, "Password id not matched");
+  }
+  user!.password = await bcrypt.hash(newPassword, Number(config.BCRYPT_SALT));
+  // Password Update
+  user?.save();
+};
+
+export const authServices = { credentialsLogin, getAccessToken, resetPassword };
