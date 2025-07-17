@@ -11,30 +11,30 @@ import {
 } from "../../utils/userToken";
 import config from "../../config";
 
-const credentialsLogin = async (payload: Partial<IUser>) => {
-  const { email, password } = payload;
-  const existUser = await User.findOne({ email });
-  if (!existUser) {
-    throw new AppError(httpStatus.BAD_REQUEST, "User is not Exists");
-  }
-  const matchedPassword = await bcrypt.compare(
-    password as string,
-    existUser.password as string
-  );
-  if (!matchedPassword) {
-    throw new AppError(
-      httpStatus.BAD_REQUEST,
-      "Password not matched! try again"
-    );
-  }
-  const userToken = createUserToken(existUser);
-  const { password: pass, ...rest } = existUser.toObject();
-  return {
-    user: rest,
-    accessToken: userToken?.accessToken,
-    refreshToken: userToken?.refreshToken,
-  };
-};
+// const credentialsLogin = async (payload: Partial<IUser>) => {
+//   const { email, password } = payload;
+//   const existUser = await User.findOne({ email });
+//   if (!existUser) {
+//     throw new AppError(httpStatus.BAD_REQUEST, "User is not Exists");
+//   }
+//   const matchedPassword = await bcrypt.compare(
+//     password as string,
+//     existUser.password as string
+//   );
+//   if (!matchedPassword) {
+//     throw new AppError(
+//       httpStatus.BAD_REQUEST,
+//       "Password not matched! try again"
+//     );
+//   }
+//   const userToken = createUserToken(existUser);
+//   const { password: pass, ...rest } = existUser.toObject();
+//   return {
+//     user: rest,
+//     accessToken: userToken?.accessToken,
+//     refreshToken: userToken?.refreshToken,
+//   };
+// };
 
 const getAccessToken = async (refreshToken: string) => {
   const newAccessToken = await createAccessTokenWithRefreshToken(refreshToken);
@@ -62,4 +62,4 @@ const resetPassword = async (
   user?.save();
 };
 
-export const authServices = { credentialsLogin, getAccessToken, resetPassword };
+export const authServices = { getAccessToken, resetPassword };
